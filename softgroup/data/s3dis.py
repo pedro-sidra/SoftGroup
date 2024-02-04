@@ -9,9 +9,21 @@ from .custom import CustomDataset
 
 
 class S3DISDataset(CustomDataset):
-
-    CLASSES = ('ceiling', 'floor', 'wall', 'beam', 'column', 'window', 'door', 'chair', 'table',
-               'bookcase', 'sofa', 'board', 'clutter')
+    CLASSES = (
+        "ceiling",
+        "floor",
+        "wall",
+        "beam",
+        "column",
+        "window",
+        "door",
+        "chair",
+        "table",
+        "bookcase",
+        "sofa",
+        "board",
+        "clutter",
+    )
 
     def __init__(self, x4_split=False, **kwargs):
         super().__init__(**kwargs)
@@ -22,8 +34,8 @@ class S3DISDataset(CustomDataset):
             self.prefix = [self.prefix]
         filenames_all = []
         for p in self.prefix:
-            filenames = glob(osp.join(self.data_root, p + '*' + self.suffix))
-            assert len(filenames) > 0, f'Empty {p}'
+            filenames = glob(osp.join(self.data_root, p + "*" + self.suffix))
+            assert len(filenames) > 0, f"Empty {p}"
             filenames_all.extend(filenames)
         filenames_all = sorted(filenames_all * self.repeat)
         return filenames_all
@@ -74,7 +86,9 @@ class S3DISDataset(CustomDataset):
         semantic_label = np.concatenate(semantic_label_list, 0)
         instance_label = np.concatenate(instance_label_list, 0)
         valid_idxs = np.ones(xyz.shape[0], dtype=bool)
-        instance_label = self.getCroppedInstLabel(instance_label, valid_idxs)  # TODO remove this
+        instance_label = self.getCroppedInstLabel(
+            instance_label, valid_idxs
+        )  # TODO remove this
         return xyz, xyz_middle, rgb, semantic_label, instance_label
 
     def collate_fn(self, batch):
@@ -82,8 +96,18 @@ class S3DISDataset(CustomDataset):
             return super().collate_fn(batch)
 
         # assume 1 scan only
-        (scan_id, coord, coord_float, feat, semantic_label, instance_label, inst_num, inst_pointnum,
-         inst_cls, pt_offset_label) = batch[0]
+        (
+            scan_id,
+            coord,
+            coord_float,
+            feat,
+            semantic_label,
+            instance_label,
+            inst_num,
+            inst_pointnum,
+            inst_cls,
+            pt_offset_label,
+        ) = batch[0]
         scan_ids = [scan_id]
         coords = coord.long()
         batch_idxs = torch.zeros_like(coord[:, 0].int())
@@ -94,22 +118,23 @@ class S3DISDataset(CustomDataset):
         instance_pointnum = torch.tensor([inst_pointnum], dtype=torch.int)
         instance_cls = torch.tensor([inst_cls], dtype=torch.long)
         pt_offset_labels = pt_offset_label.float()
-        spatial_shape = np.clip((coords.max(0)[0][1:] + 1).numpy(), self.voxel_cfg.spatial_shape[0],
-                                None)
+        spatial_shape = np.clip(
+            (coords.max(0)[0][1:] + 1).numpy(), self.voxel_cfg.spatial_shape[0], None
+        )
         voxel_coords, v2p_map, p2v_map = voxelization_idx(coords, 4)
         return {
-            'scan_ids': scan_ids,
-            'batch_idxs': batch_idxs,
-            'voxel_coords': voxel_coords,
-            'p2v_map': p2v_map,
-            'v2p_map': v2p_map,
-            'coords_float': coords_float,
-            'feats': feats,
-            'semantic_labels': semantic_labels,
-            'instance_labels': instance_labels,
-            'instance_pointnum': instance_pointnum,
-            'instance_cls': instance_cls,
-            'pt_offset_labels': pt_offset_labels,
-            'spatial_shape': spatial_shape,
-            'batch_size': 4
+            "scan_ids": scan_ids,
+            "batch_idxs": batch_idxs,
+            "voxel_coords": voxel_coords,
+            "p2v_map": p2v_map,
+            "v2p_map": v2p_map,
+            "coords_float": coords_float,
+            "feats": feats,
+            "semantic_labels": semantic_labels,
+            "instance_labels": instance_labels,
+            "instance_pointnum": instance_pointnum,
+            "instance_cls": instance_cls,
+            "pt_offset_labels": pt_offset_labels,
+            "spatial_shape": spatial_shape,
+            "batch_size": 4,
         }

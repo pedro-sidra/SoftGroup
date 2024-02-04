@@ -6,24 +6,24 @@ from .s3dis import S3DISDataset
 from .scannetv2 import ScanNetDataset
 from .stpls3d import STPLS3DDataset
 
-__all__ = ['S3DISDataset', 'ScanNetDataset', 'build_dataset']
+__all__ = ["S3DISDataset", "ScanNetDataset", "build_dataset"]
 
 
 def build_dataset(data_cfg, logger):
-    assert 'type' in data_cfg
+    assert "type" in data_cfg
     _data_cfg = data_cfg.copy()
-    _data_cfg['logger'] = logger
-    data_type = _data_cfg.pop('type')
-    if data_type == 's3dis':
+    _data_cfg["logger"] = logger
+    data_type = _data_cfg.pop("type")
+    if data_type == "s3dis":
         return S3DISDataset(**_data_cfg)
-    elif data_type == 'scannetv2':
+    elif data_type == "scannetv2":
         return ScanNetDataset(**_data_cfg)
-    elif data_type == 'stpls3d':
+    elif data_type == "stpls3d":
         return STPLS3DDataset(**_data_cfg)
-    elif data_type == 'kitti':
+    elif data_type == "kitti":
         return KITTIDataset(**_data_cfg)
     else:
-        raise ValueError(f'Unknown {data_type}')
+        raise ValueError(f"Unknown {data_type}")
 
 
 def build_dataloader(dataset, batch_size=1, num_workers=1, training=True, dist=False):
@@ -40,7 +40,8 @@ def build_dataloader(dataset, batch_size=1, num_workers=1, training=True, dist=F
             shuffle=shuffle,
             sampler=sampler,
             drop_last=True,
-            pin_memory=True)
+            pin_memory=True,
+        )
     else:
         assert batch_size == 1
         return DataLoader(
@@ -51,4 +52,5 @@ def build_dataloader(dataset, batch_size=1, num_workers=1, training=True, dist=F
             shuffle=False,
             sampler=sampler,
             drop_last=False,
-            pin_memory=True)
+            pin_memory=True,
+        )

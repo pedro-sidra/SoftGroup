@@ -9,33 +9,53 @@ from .custom import CustomDataset
 
 
 class KITTIDataset(CustomDataset):
-
-    STUFF = ('road', 'parking', 'sidewalk', 'otherground', 'building', 'fence', 'vegetation',
-             'trunk', 'terrain', 'pole', 'traffic-sign')
-    THING = ('car', 'bicycle', 'motorcycle', 'truck', 'other-vehicle', 'person', 'bicyclist',
-             'motorcyclist')
+    STUFF = (
+        "road",
+        "parking",
+        "sidewalk",
+        "otherground",
+        "building",
+        "fence",
+        "vegetation",
+        "trunk",
+        "terrain",
+        "pole",
+        "traffic-sign",
+    )
+    THING = (
+        "car",
+        "bicycle",
+        "motorcycle",
+        "truck",
+        "other-vehicle",
+        "person",
+        "bicyclist",
+        "motorcyclist",
+    )
     CLASSES = THING
     NYU_ID = None
 
-    def __init__(self,
-                 data_root,
-                 prefix,
-                 suffix,
-                 voxel_cfg=None,
-                 training=True,
-                 with_label=True,
-                 repeat=1,
-                 logger=None):
-        with open(osp.join(data_root, 'semantic-kitti.yaml'), 'r') as f:
+    def __init__(
+        self,
+        data_root,
+        prefix,
+        suffix,
+        voxel_cfg=None,
+        training=True,
+        with_label=True,
+        repeat=1,
+        logger=None,
+    ):
+        with open(osp.join(data_root, "semantic-kitti.yaml"), "r") as f:
             semkittiyaml = yaml.safe_load(f)
-        if prefix == 'train':
-            self.split = semkittiyaml['split']['train']
-        elif prefix == 'val':
-            self.split = semkittiyaml['split']['valid']
-        elif prefix == 'test':
-            self.split = semkittiyaml['split']['test']
-        self.learning_map = semkittiyaml['learning_map']
-        self.learning_map_inv = semkittiyaml['learning_map_inv']
+        if prefix == "train":
+            self.split = semkittiyaml["split"]["train"]
+        elif prefix == "val":
+            self.split = semkittiyaml["split"]["valid"]
+        elif prefix == "test":
+            self.split = semkittiyaml["split"]["test"]
+        self.learning_map = semkittiyaml["learning_map"]
+        self.learning_map_inv = semkittiyaml["learning_map_inv"]
 
         # stuff 0 -> 10, thing 11 -> 18, ignore -100
         for k, v in self.learning_map.items():
@@ -46,15 +66,23 @@ class KITTIDataset(CustomDataset):
             else:
                 new_v = v - 9
             self.learning_map[k] = new_v
-        super(KITTIDataset, self).__init__(data_root, prefix, suffix, voxel_cfg, training,
-                                           with_label, repeat, logger)
+        super(KITTIDataset, self).__init__(
+            data_root, prefix, suffix, voxel_cfg, training, with_label, repeat, logger
+        )
 
     def get_filenames(self):
         filenames_all = []
         for p in self.split:
             filenames = glob(
-                osp.join(self.data_root, 'sequences', f'{p:02d}', 'velodyne', '*' + self.suffix))
-            assert len(filenames) > 0, f'Empty {p}'
+                osp.join(
+                    self.data_root,
+                    "sequences",
+                    f"{p:02d}",
+                    "velodyne",
+                    "*" + self.suffix,
+                )
+            )
+            assert len(filenames) > 0, f"Empty {p}"
             filenames_all.extend(filenames)
         filenames_all = sorted(filenames_all * self.repeat)
         return filenames_all
@@ -64,7 +92,9 @@ class KITTIDataset(CustomDataset):
         xyz, rgb = data[:, :3], data[:, 3:]
         if self.with_label:
             label = np.fromfile(
-                filename.replace('velodyne', 'labels').replace('bin', 'label'), dtype=np.int32)
+                filename.replace("velodyne", "labels").replace("bin", "label"),
+                dtype=np.int32,
+            )
             semantic_label = label & 0xFFFF
             semantic_label = np.vectorize(self.learning_map.__getitem__)(semantic_label)
             stuff_inds = semantic_label <= 10
@@ -96,13 +126,13 @@ class KITTIDataset(CustomDataset):
         down = 5
         xyz = xyz_middle * self.voxel_cfg.scale / down
         if np.random.rand() < aug_prob:
-            xyz = self.elastic(xyz, 6, 40. / down)
-            xyz = self.elastic(xyz, 20, 160. / down)
+            xyz = self.elastic(xyz, 6, 40.0 / down)
+            xyz = self.elastic(xyz, 20, 160.0 / down)
         xyz = xyz * down
 
         xyz = xyz - xyz.min(0)
         max_tries = 5
-        while (max_tries > 0):
+        while max_tries > 0:
             xyz_offset, valid_idxs = self.crop(xyz)
             if valid_idxs.sum() >= self.voxel_cfg.min_npoint:
                 xyz = xyz_offset
@@ -127,8 +157,8 @@ class KITTIDataset(CustomDataset):
         # add sequence_id to scan_id
         filename = self.filenames[index]
         parts = Path(filename).parts[-4:]
-        scan_id = osp.join(*parts).replace(self.suffix, '')
+        scan_id = osp.join(*parts).replace(self.suffix, "")
         data = super().__getitem__(index)
         if data is None:
             return data
-        return (scan_id, ) + data[1:]
+        return (scan_id,) + data[1:]

@@ -28,7 +28,7 @@ class AverageMeter(object):
         if world_size == 1:
             return val
         if not isinstance(val, torch.Tensor):
-            val = torch.tensor(val, device='cuda')
+            val = torch.tensor(val, device="cuda")
         dist.all_reduce(val)
         return val.item() / world_size
 
@@ -52,15 +52,18 @@ class AverageMeter(object):
 
 
 # Epoch counts from 0 to N-1
-def cosine_lr_after_step(optimizer, base_lr, epoch, step_epoch, total_epochs, clip=1e-6):
+def cosine_lr_after_step(
+    optimizer, base_lr, epoch, step_epoch, total_epochs, clip=1e-6
+):
     if epoch < step_epoch:
         lr = base_lr
     else:
-        lr = clip + 0.5 * (base_lr - clip) * \
-            (1 + cos(pi * ((epoch - step_epoch) / (total_epochs - step_epoch))))
+        lr = clip + 0.5 * (base_lr - clip) * (
+            1 + cos(pi * ((epoch - step_epoch) / (total_epochs - step_epoch)))
+        )
 
     for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
+        param_group["lr"] = lr
 
 
 def is_power2(num):
@@ -87,33 +90,35 @@ def weights_to_cpu(state_dict):
 
 @master_only
 def checkpoint_save(epoch, model, optimizer, work_dir, save_freq=16):
-    if hasattr(model, 'module'):
+    if hasattr(model, "module"):
         model = model.module
-    f = os.path.join(work_dir, f'epoch_{epoch}.pth')
+    f = os.path.join(work_dir, f"epoch_{epoch}.pth")
     checkpoint = {
-        'net': weights_to_cpu(model.state_dict()),
-        'optimizer': optimizer.state_dict(),
-        'epoch': epoch
+        "net": weights_to_cpu(model.state_dict()),
+        "optimizer": optimizer.state_dict(),
+        "epoch": epoch,
     }
     torch.save(checkpoint, f)
-    if os.path.exists(f'{work_dir}/latest.pth'):
-        os.remove(f'{work_dir}/latest.pth')
-    os.system(f'cd {work_dir}; ln -s {osp.basename(f)} latest.pth')
+    if os.path.exists(f"{work_dir}/latest.pth"):
+        os.remove(f"{work_dir}/latest.pth")
+    os.system(f"cd {work_dir}; ln -s {osp.basename(f)} latest.pth")
 
     # remove previous checkpoints unless they are a power of 2 or a multiple of save_freq
     epoch = epoch - 1
-    f = os.path.join(work_dir, f'epoch_{epoch}.pth')
+    f = os.path.join(work_dir, f"epoch_{epoch}.pth")
     if os.path.isfile(f):
         if not is_multiple(epoch, save_freq) and not is_power2(epoch):
             os.remove(f)
 
 
 def load_checkpoint(checkpoint, logger, model, optimizer=None, strict=False):
-    if hasattr(model, 'module'):
+    if hasattr(model, "module"):
         model = model.module
     device = torch.cuda.current_device()
-    state_dict = torch.load(checkpoint, map_location=lambda storage, loc: storage.cuda(device))
-    src_state_dict = state_dict['net']
+    state_dict = torch.load(
+        checkpoint, map_location=lambda storage, loc: storage.cuda(device)
+    )
+    src_state_dict = state_dict["net"]
     target_state_dict = model.state_dict()
     skip_keys = []
     # skip mismatch size tensors in case of pretraining
@@ -127,19 +132,22 @@ def load_checkpoint(checkpoint, logger, model, optimizer=None, strict=False):
     missing_keys, unexpected_keys = model.load_state_dict(src_state_dict, strict=strict)
     if skip_keys:
         logger.info(
-            f'removed keys in source state_dict due to size mismatch: {", ".join(skip_keys)}')
+            f'removed keys in source state_dict due to size mismatch: {", ".join(skip_keys)}'
+        )
     if missing_keys:
         logger.info(f'missing keys in source state_dict: {", ".join(missing_keys)}')
     if unexpected_keys:
-        logger.info(f'unexpected key in source state_dict: {", ".join(unexpected_keys)}')
+        logger.info(
+            f'unexpected key in source state_dict: {", ".join(unexpected_keys)}'
+        )
 
     # load optimizer
     if optimizer is not None:
-        assert 'optimizer' in state_dict
-        optimizer.load_state_dict(state_dict['optimizer'])
+        assert "optimizer" in state_dict
+        optimizer.load_state_dict(state_dict["optimizer"])
 
-    if 'epoch' in state_dict:
-        epoch = state_dict['epoch']
+    if "epoch" in state_dict:
+        epoch = state_dict["epoch"]
     else:
         epoch = 0
     return epoch + 1
@@ -147,7 +155,7 @@ def load_checkpoint(checkpoint, logger, model, optimizer=None, strict=False):
 
 def get_max_memory():
     mem = torch.cuda.max_memory_allocated()
-    mem_mb = torch.tensor([int(mem) // (1024 * 1024)], dtype=torch.int, device='cuda')
+    mem_mb = torch.tensor([int(mem) // (1024 * 1024)], dtype=torch.int, device="cuda")
     _, world_size = get_dist_info()
     if world_size > 1:
         dist.reduce(mem_mb, 0, op=dist.ReduceOp.MAX)
@@ -155,7 +163,6 @@ def get_max_memory():
 
 
 def cuda_cast(func):
-
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         new_args = []

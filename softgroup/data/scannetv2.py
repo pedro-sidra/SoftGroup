@@ -5,10 +5,26 @@ from .custom import CustomDataset
 
 
 class ScanNetDataset(CustomDataset):
-
-    CLASSES = ('cabinet', 'bed', 'chair', 'sofa', 'table', 'door', 'window', 'bookshelf', 'picture',
-               'counter', 'desk', 'curtain', 'refrigerator', 'shower curtain', 'toilet', 'sink',
-               'bathtub', 'otherfurniture')
+    CLASSES = (
+        "cabinet",
+        "bed",
+        "chair",
+        "sofa",
+        "table",
+        "door",
+        "window",
+        "bookshelf",
+        "picture",
+        "counter",
+        "desk",
+        "curtain",
+        "refrigerator",
+        "shower curtain",
+        "toilet",
+        "sink",
+        "bathtub",
+        "otherfurniture",
+    )
     NYU_ID = (3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 24, 28, 33, 34, 36, 39)
 
     def load(self, filename):

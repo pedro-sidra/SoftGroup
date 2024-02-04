@@ -1,3 +1,3 @@
 from .softgroup import SoftGroup
 
-__all__ = ['SoftGroup']
+__all__ = ["SoftGroup"]

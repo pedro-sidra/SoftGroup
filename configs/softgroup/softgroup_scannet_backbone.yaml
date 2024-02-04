@@ -10,11 +10,30 @@ model:
     score_thr: 0.2
     radius: 0.04
     mean_active: 300
-    class_numpoint_mean: [-1., -1., 3917., 12056., 2303.,
-                          8331., 3948., 3166., 5629., 11719.,
-                          1003., 3317., 4912., 10221., 3889.,
-                          4136., 2120., 945., 3967., 2589.]
-    npoint_thr: 0.05  # absolute if class_numpoint == -1, relative if class_numpoint != -1
+    class_numpoint_mean:
+      [
+        -1.,
+        -1.,
+        3917.,
+        12056.,
+        2303.,
+        8331.,
+        3948.,
+        3166.,
+        5629.,
+        11719.,
+        1003.,
+        3317.,
+        4912.,
+        10221.,
+        3889.,
+        4136.,
+        2120.,
+        945.,
+        3967.,
+        2589.,
+      ]
+    npoint_thr: 0.05 # absolute if class_numpoint == -1, relative if class_numpoint != -1
     ignore_classes: [0, 1]
   instance_voxel_cfg:
     scale: 50
@@ -27,14 +46,14 @@ model:
     cls_score_thr: 0.001
     mask_score_thr: -0.5
     min_npoint: 100
-  fixed_modules: ['input_conv', 'unet', 'output_layer', 'semantic_linear']
+  fixed_modules: ["input_conv", "unet", "output_layer", "semantic_linear"]
 
 data:
   train:
-    type: 'scannetv2'
-    data_root: 'dataset/scannetv2'
-    prefix: 'train'
-    suffix: '_inst_nostuff.pth'
+    type: "scannetv2"
+    data_root: "dataset/scannetv2"
+    prefix: "train"
+    suffix: "_inst_nostuff.pth"
     training: True
     repeat: 4
     voxel_cfg:
@@ -43,10 +62,10 @@ data:
       max_npoint: 250000
       min_npoint: 5000
   test:
-    type: 'scannetv2'
-    data_root: 'dataset/scannetv2'
-    prefix: 'val'
-    suffix: '_inst_nostuff.pth'
+    type: "scannetv2"
+    data_root: "dataset/scannetv2"
+    prefix: "val"
+    suffix: "_inst_nostuff.pth"
     training: False
     voxel_cfg:
       scale: 50
@@ -56,14 +75,14 @@ data:
 
 dataloader:
   train:
-    batch_size: 4
+    batch_size: 3
     num_workers: 4
   test:
     batch_size: 1
     num_workers: 1
 
 optimizer:
-  type: 'Adam'
+  type: "Adam"
   lr: 0.004
 
 save_cfg:
@@ -75,5 +94,5 @@ fp16: False
 epochs: 128
 step_epoch: 50
 save_freq: 4
-pretrain: './checkpoint/hais_ckpt_spconv2.pth'
-work_dir: ''
+pretrain: ""
+work_dir: ""
