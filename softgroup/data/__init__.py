@@ -5,6 +5,7 @@ from .kitti import KITTIDataset
 from .s3dis import S3DISDataset
 from .scannetv2 import ScanNetDataset
 from .stpls3d import STPLS3DDataset
+from .sculpting import SculptingPreTraining
 
 __all__ = ["S3DISDataset", "ScanNetDataset", "build_dataset"]
 
@@ -16,6 +17,8 @@ def build_dataset(data_cfg, logger):
     data_type = _data_cfg.pop("type")
     if data_type == "s3dis":
         return S3DISDataset(**_data_cfg)
+    elif data_type == "sculpting":
+        return SculptingPreTraining(**_data_cfg)
     elif data_type == "scannetv2":
         return ScanNetDataset(**_data_cfg)
     elif data_type == "stpls3d":
